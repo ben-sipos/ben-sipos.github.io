@@ -1,0 +1,589 @@
+<!--
+ index.html — Single-file personal site for Benedek Sipos
+ Notes:
+ - Uses Bootstrap 5 and Bootstrap Icons via jsDelivr.
+ - All CSS in one <style> block and all JS in one <script> block at the end.
+ - Theme toggle saves preference to localStorage and toggles data-bs-theme on <html>.
+ - Script attempts a HEAD fetch to "cv.pdf" to show/hide the CV button; fails silently on CORS.
+ - Profile image uses "Ben Sipos Headshot.jpeg" and falls back to a clear note if missing.
+ - JSON-LD Person included with name, email, and links.
+ - Follow-up edits: ensure your repo root contains "cv.pdf" and the image file if you want them active.
+-->
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Benedek Sipos — ISU MSc Student</title>
+  <meta name="description" content="Benedek Sipos — MSc student at ISU focused on human performance, regenerative biology and space research. Contact: benedek.g.sipos@gmail.com" />
+  <meta name="author" content="Benedek Sipos" />
+  <meta property="og:title" content="Benedek Sipos — ISU MSc Student" />
+  <meta property="og:description" content="MSc student at ISU focused on human performance, regenerative biology and space research." />
+  <meta property="og:type" content="profile" />
+  <meta property="og:site_name" content="Benedek Sipos — Personal Page" />
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-XLKq7Yh2qKk9kC2mE0G6JdZr3C2o8u7W2Iu7mQ6eYfZkP1lqJ9y1QG6t0QF3Qe9K" crossorigin="anonymous">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    :root{
+      --isu-blue: #0b3d91;
+      --isu-gold: #f0b429;
+      --isu-ink:  #0d1b2a;
+      --isu-sky:  #e6f1ff;
+      --content-max-width: 900px;
+      --radius: .75rem;
+      --muted: #6c757d;
+    }
+
+    /* System font stack */
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background-color: var(--isu-ink);
+      color: #e9eef8;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+
+    /* Light theme overrides when data-bs-theme="light" */
+    html[data-bs-theme="light"] {
+      background-color: #ffffff;
+      color: #0d1b2a;
+    }
+
+    /* Container */
+    .container-narrow {
+      max-width: var(--content-max-width);
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Sticky navbar */
+    header.navbar {
+      backdrop-filter: blur(6px);
+      background-color: rgba(13,27,42,0.6);
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    html[data-bs-theme="light"] header.navbar {
+      background-color: rgba(255,255,255,0.85);
+      border-bottom-color: rgba(13,27,42,0.06);
+    }
+
+    .brand-isu {
+      display:inline-flex;
+      align-items:center;
+      gap:.5rem;
+      font-weight:600;
+      color:var(--isu-gold);
+    }
+
+    /* Hero */
+    .hero {
+      padding: 3rem 1rem;
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(11,61,145,0.12), rgba(11,61,145,0.05));
+      margin-top: 1rem;
+    }
+    html[data-bs-theme="light"] .hero {
+      background: linear-gradient(180deg, rgba(11,61,145,0.06), rgba(11,61,145,0.02));
+    }
+
+    .profile-img {
+      width: 140px;
+      height: 140px;
+      object-fit:cover;
+      border-radius:50%;
+      box-shadow: 0 6px 18px rgba(2,6,23,0.6);
+      border: 3px solid rgba(240,180,41,0.12);
+    }
+
+    /* Project cards */
+    .project-card {
+      border-radius: .75rem;
+      background-color: rgba(255,255,255,0.03);
+      padding: 1rem;
+      min-height: 180px;
+    }
+    html[data-bs-theme="light"] .project-card {
+      background-color: rgba(13,27,42,0.03);
+    }
+
+    /* Timeline */
+    .timeline {
+      position: relative;
+      padding-left: 1.25rem;
+    }
+    .timeline::before {
+      content: "";
+      position: absolute;
+      left: 10px;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: linear-gradient(180deg, var(--isu-gold), var(--isu-blue));
+      border-radius: 3px;
+    }
+    .timeline-item {
+      position: relative;
+      margin-bottom: 1.25rem;
+      padding-left: 1rem;
+    }
+    .timeline-item::before {
+      content: "";
+      position: absolute;
+      left: -2px;
+      top: 4px;
+      width: 14px;
+      height: 14px;
+      background-color: var(--isu-gold);
+      border-radius: 50%;
+      border: 3px solid var(--isu-ink);
+    }
+    html[data-bs-theme="light"] .timeline-item::before {
+      border-color: white;
+    }
+
+    /* Edit checklist */
+    .checklist li { margin-bottom: .5rem; }
+
+    /* Footer */
+    footer {
+      margin-top: 2rem;
+      padding: 1rem 0;
+      border-top: 1px dashed rgba(255,255,255,0.04);
+      color: var(--muted);
+      font-size: .95rem;
+    }
+
+    /* Utility */
+    .muted { color: var(--muted); }
+    .small-note { font-size: .9rem; color: var(--muted); }
+
+    /* Respect reduced motion for smooth scroll and subtle transitions */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        transition: none !important;
+        animation: none !important;
+      }
+      html { scroll-behavior: auto; }
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      html { scroll-behavior: smooth; }
+      a.skip-link { transition: transform .15s ease; }
+    }
+
+    /* Skip link */
+    .skip-link {
+      position: absolute;
+      left: .5rem;
+      top: .5rem;
+      z-index: 2000;
+      background: var(--isu-gold);
+      color: var(--isu-ink);
+      padding: .35rem .5rem;
+      border-radius: .35rem;
+      transform: translateY(-120%);
+    }
+    .skip-link:focus {
+      transform: translateY(0);
+      outline: 3px solid rgba(240,180,41,0.35);
+    }
+
+    /* Responsive tweaks */
+    @media (max-width: 575px) {
+      .hero { padding: 1.5rem .75rem; }
+      .profile-img { width: 110px; height:110px; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link visually-hidden-focusable" href="#main">Skip to content</a>
+
+  <header class="navbar sticky-top shadow-sm">
+    <nav class="container container-narrow d-flex flex-wrap align-items-center justify-content-between py-2" aria-label="Main navigation">
+      <div class="d-flex align-items-center gap-2">
+        <span class="brand-isu" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.2" style="color:var(--isu-gold)"/>
+            <path d="M4 12c4-6 12-6 16 0" stroke="currentColor" stroke-width="1.2" style="color:var(--isu-blue)" stroke-linecap="round"/>
+          </svg>
+          ISU Student
+        </span>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+        <button id="themeToggle" class="btn btn-sm btn-outline-light" aria-pressed="true" aria-label="Toggle theme">
+          <i class="bi bi-moon-stars-fill" aria-hidden="true"></i>
+          <span class="visually-hidden">Toggle theme</span>
+        </button>
+
+        <ul class="nav nav-pills ms-2 d-none d-md-flex" role="menubar" aria-label="Section links">
+          <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="#projects">Projects</a></li>
+          <li class="nav-item"><a class="nav-link" href="#experience">Experience</a></li>
+          <li class="nav-item"><a class="nav-link" href="#cv">CV</a></li>
+          <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+        </ul>
+        <button class="btn btn-sm btn-outline-secondary d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#navOffcanvas" aria-controls="navOffcanvas" aria-label="Open menu">
+          <i class="bi bi-list"></i>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Offcanvas nav for small screens -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="navOffcanvas" aria-labelledby="navOffcanvasLabel">
+    <div class="offcanvas-header">
+      <h5 id="navOffcanvasLabel" class="offcanvas-title">Menu</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+      <nav class="nav flex-column">
+        <a class="nav-link" href="#about" data-bs-dismiss="offcanvas">About</a>
+        <a class="nav-link" href="#projects" data-bs-dismiss="offcanvas">Projects</a>
+        <a class="nav-link" href="#experience" data-bs-dismiss="offcanvas">Experience</a>
+        <a class="nav-link" href="#cv" data-bs-dismiss="offcanvas">CV</a>
+        <a class="nav-link" href="#contact" data-bs-dismiss="offcanvas">Contact</a>
+      </nav>
+    </div>
+  </div>
+
+  <main id="main" class="container container-narrow" tabindex="-1" role="main" aria-labelledby="hero-heading">
+    <!-- Hero -->
+    <section class="hero d-flex flex-column flex-md-row gap-3 align-items-center" aria-labelledby="hero-heading">
+      <div class="d-flex gap-3 align-items-center">
+        <div>
+          <img id="profileImg" src="Ben Sipos Headshot.jpeg" alt="Benedek Sipos headshot" class="profile-img" onerror="this.style.display='none'; document.getElementById('imgNote').style.display='block';">
+          <div id="imgNote" class="small-note mt-2" style="display:none;">Profile image not found. Add <code>Ben Sipos Headshot.jpeg</code> to the repo root to show a headshot.</div>
+        </div>
+        <div>
+          <h1 id="hero-heading" class="h3 mb-1">Benedek Sipos</h1>
+          <p class="lead mb-1">MSc student at ISU focused on human performance and regenerative biology.</p>
+          <p class="small-note mb-2">MSc 2026 — Sopron, Hungary</p>
+
+          <div class="d-flex gap-2">
+            <a href="#projects" class="btn btn-sm btn-primary" role="button" aria-label="View projects">Projects</a>
+            <a id="cvBtn" href="cv.pdf" class="btn btn-sm btn-outline-light" role="button" style="display:none;" aria-label="Open CV">Open CV</a>
+            <span id="cvNote" class="small-note align-self-center">Add <code>cv.pdf</code> to repo root to enable CV button.</span>
+            <a href="#contact" class="btn btn-sm btn-outline-secondary" role="button" aria-label="Contact">Contact</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="ms-auto text-end small-note">
+        <div>Unofficial student page. “International Space University” named here for study use only.</div>
+        <div class="mt-2">Sopron, Hungary • Languages: English, German, Hungarian</div>
+      </div>
+    </section>
+
+    <!-- About -->
+    <section id="about" class="mt-4" aria-labelledby="about-heading">
+      <h2 id="about-heading" class="h5">About</h2>
+      <p class="mb-1">Short bio: I am an MSc student at ISU (MSc 2026) researching human performance and regenerative biology, with lab and data skills.</p>
+
+      <div class="row mt-3">
+        <div class="col-md-6">
+          <h3 class="h6">Focus</h3>
+          <ul>
+            <li>Human Performance in Space</li>
+            <li>Microgravitational Biology</li>
+            <li>Developmental & Regenerative Biology</li>
+          </ul>
+        </div>
+        <div class="col-md-6">
+          <h3 class="h6">Tools</h3>
+          <ul>
+            <li>Immunofluorescent Staining</li>
+            <li>Fluorescent Microscopy</li>
+            <li>Cryosectioning</li>
+            <li>PCR & qPCR</li>
+            <li>RNA Isolation</li>
+            <li>Cell Culture Maintenance & Treatment</li>
+            <li>Gel Electrophoresis</li>
+            <li>DNA Cloning</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Projects -->
+    <section id="projects" class="mt-4" aria-labelledby="projects-heading">
+      <h2 id="projects-heading" class="h5">Projects</h2>
+      <div class="row g-3 mt-2">
+        <!-- Project 1 -->
+        <div class="col-md-6">
+          <article class="project-card">
+            <h3 class="h6">Kidney Regeneration Research</h3>
+            <p class="small-note mb-2">Studied the Six2 nephron progenitor protein to find ways to regulate expression and influence kidney regeneration.</p>
+            <ul>
+              <li>qPCR, Protein Inhibition, Knockdowns</li>
+              <li>Knockdown/inhibit Six2 regulators then quantify Six2 with qPCR</li>
+              <li>Found moderately effective approaches to upregulate Six2 expression</li>
+            </ul>
+            <div class="mt-2">
+              <!-- No demo/code links provided; hide buttons -->
+            </div>
+          </article>
+        </div>
+
+        <!-- Project 2 -->
+        <div class="col-md-6">
+          <article class="project-card">
+            <h3 class="h6">Jupiter Auroral Research</h3>
+            <p class="small-note mb-2">Analyzed X-ray and UV emission patterns of Jupiter's aurorae using combined Hubble and Chandra data.</p>
+            <ul>
+              <li>Spectrum analysis, coding, satellite imaging</li>
+              <li>Overlayed Hubble & Chandra images with Python to map emission density</li>
+              <li>Identified a "Dark Polar Region" with consistently low emissions</li>
+            </ul>
+            <div class="mt-2">
+              <a class="btn btn-sm btn-outline-light" href="https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2021GL097390" target="_blank" rel="noopener" aria-label="Read related article">Article</a>
+            </div>
+          </article>
+        </div>
+
+        <!-- Project 3 (placeholder) -->
+        <div class="col-12">
+          <article class="project-card">
+            <h3 class="h6">Placeholder Project — Edit me</h3>
+            <p class="small-note mb-2">Add a short summary and links for this project.</p>
+            <ul>
+              <li>Tool / data: Edit</li>
+              <li>Method: Edit</li>
+              <li>Outcome: Edit</li>
+            </ul>
+            <div class="mt-2">
+              <span class="small-note">Add Demo and Code links in the HTML to enable buttons.</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Experience -->
+    <section id="experience" class="mt-4" aria-labelledby="experience-heading">
+      <h2 id="experience-heading" class="h5">Experience</h2>
+      <div class="timeline mt-3" role="list">
+        <!-- Entry 1 -->
+        <div class="timeline-item" role="listitem" aria-labelledby="exp1">
+          <h3 id="exp1" class="h6 mb-0">Undergraduate Researcher — UCSF CVRI, Huang Lab</h3>
+          <div class="small-note">Sep 2023 — May 2025</div>
+          <p class="mb-1">Contributed to regenerative biology research focused on kidney regeneration. Performed experiments and data analysis supporting Six2 expression studies.</p>
+        </div>
+
+        <!-- Entry 2 -->
+        <div class="timeline-item" role="listitem" aria-labelledby="exp2">
+          <h3 id="exp2" class="h6 mb-0">Student Researcher — ORBYTS Jupiter Research Group</h3>
+          <div class="small-note">Oct 2020 — Jun 2022</div>
+          <p class="mb-1">Analyzed multi-telescope observations to study UV and X-ray correlations in Jupiter's aurorae and helped publish statistical findings on emission patterns.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CV -->
+    <section id="cv" class="mt-4" aria-labelledby="cv-heading">
+      <h2 id="cv-heading" class="h5">CV</h2>
+      <p class="small-note">If a file named <code>cv.pdf</code> exists at the repo root, the "Open CV" button will appear in the hero. Otherwise, add <code>cv.pdf</code> to the root and it will show.</p>
+      <p class="small-note">You uploaded <code>Benedek Sipos - CV.pdf</code>. Rename to <code>cv.pdf</code> to enable a direct link from this page.</p>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact" class="mt-4" aria-labelledby="contact-heading">
+      <h2 id="contact-heading" class="h5">Contact</h2>
+      <p class="mb-1">Email: <span id="email" class="fw-semibold">benedek.g.sipos@gmail.com</span></p>
+      <div class="d-flex gap-2 flex-wrap">
+        <a id="mailLink" class="btn btn-outline-light btn-sm" href="mailto:benedek.g.sipos@gmail.com" aria-label="Send email">Email</a>
+        <button id="copyEmailBtn" class="btn btn-sm btn-secondary" aria-label="Copy email to clipboard">Copy email</button>
+        <a class="btn btn-sm btn-outline-info" href="https://ben-sipos.github.io" target="_blank" rel="noopener" aria-label="Open GitHub site">GitHub</a>
+        <a class="btn btn-sm btn-outline-info" href="https://www.linkedin.com/in/benedek-sipos-0b5859249" target="_blank" rel="noopener" aria-label="Open LinkedIn">LinkedIn</a>
+      </div>
+    </section>
+
+    <!-- Edit Checklist -->
+    <section id="edit-checklist" class="mt-4" aria-labelledby="checklist-heading">
+      <h2 id="checklist-heading" class="h5">Edit checklist</h2>
+      <ul class="checklist">
+        <li>Add or replace <code>Ben Sipos Headshot.jpeg</code> in repo root to show your photo.</li>
+        <li>Rename your CV file to <code>cv.pdf</code> if you want the direct CV button.</li>
+        <li>Replace placeholder project with real project details and links.</li>
+        <li>Check links (GitHub, LinkedIn) after you push the page.</li>
+        <li>Run HTML validation if desired.</li>
+      </ul>
+    </section>
+
+    <footer class="text-center mt-4">
+      <div>© <span id="year"></span> — Unofficial student page. “International Space University” named here for study use only.</div>
+    </footer>
+  </main>
+
+  <!-- Bootstrap JS and dependencies (Popper) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-qQ2k5f2m3sX8k7Z2z8K3N6Yc1H9b4q1B4G9p9s5c0f7k2V1a3q9m8Z6y0a1b2c3d" crossorigin="anonymous"></script>
+
+  <script>
+    // Single script block — required behaviors and accessibility helpers.
+    (function () {
+      'use strict';
+
+      // Insert current year
+      try {
+        document.getElementById('year').textContent = new Date().getFullYear();
+      } catch (e) { /* fail silently */ }
+
+      // Initial theme handling
+      const THEME_KEY = 'isu_theme_preference';
+      const themeToggleBtn = document.getElementById('themeToggle');
+      const root = document.documentElement;
+
+      function setTheme(name) {
+        try {
+          root.setAttribute('data-bs-theme', name);
+          localStorage.setItem(THEME_KEY, name);
+          // update icon
+          if (themeToggleBtn) {
+            themeToggleBtn.setAttribute('aria-pressed', name === 'dark' ? 'true' : 'false');
+            themeToggleBtn.innerHTML = name === 'dark'
+              ? '<i class="bi bi-moon-stars-fill"></i> <span class="visually-hidden">Switch to light</span>'
+              : '<i class="bi bi-sun-fill"></i> <span class="visually-hidden">Switch to dark</span>';
+          }
+        } catch (e) { /* silent */ }
+      }
+
+      // Load saved or default theme (user selected dark by confirmation)
+      const saved = localStorage.getItem(THEME_KEY);
+      if (saved) {
+        setTheme(saved);
+      } else {
+        setTheme('dark'); // default as confirmed
+      }
+
+      // Toggle on click
+      if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', function () {
+          const current = root.getAttribute('data-bs-theme') === 'dark' ? 'dark' : 'light';
+          setTheme(current === 'dark' ? 'light' : 'dark');
+        });
+      }
+
+      // Attempt to detect cv.pdf at repo root using HEAD fetch.
+      (function checkCV() {
+        const cvBtn = document.getElementById('cvBtn');
+        const cvNote = document.getElementById('cvNote');
+        if (!cvBtn || !cvNote) return;
+        // Try HEAD request; may be blocked by CORS. Fail silently.
+        fetch('cv.pdf', { method: 'HEAD' }).then(function (res) {
+          if (res && res.ok) {
+            cvBtn.style.display = 'inline-block';
+            cvNote.style.display = 'none';
+          } else {
+            cvBtn.style.display = 'none';
+            cvNote.style.display = '';
+          }
+        }).catch(function () {
+          // If blocked or error, hide the button (safe) and leave the note.
+          cvBtn.style.display = 'none';
+          cvNote.style.display = '';
+        });
+      })();
+
+      // Contact helpers
+      (function contactHelpers() {
+        const emailSpan = document.getElementById('email');
+        const mailLink = document.getElementById('mailLink');
+        const copyBtn = document.getElementById('copyEmailBtn');
+        if (!emailSpan) return;
+        const email = emailSpan.textContent.trim();
+        if (mailLink) mailLink.setAttribute('href', 'mailto:' + email);
+
+        if (copyBtn) {
+          copyBtn.addEventListener('click', async function () {
+            try {
+              await navigator.clipboard.writeText(email);
+              const orig = copyBtn.innerHTML;
+              copyBtn.textContent = 'Copied';
+              setTimeout(() => { copyBtn.innerHTML = orig; }, 1500);
+            } catch (e) {
+              // fallback: select text
+              try {
+                const ta = document.createElement('textarea');
+                ta.value = email;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                const orig = copyBtn.innerHTML;
+                copyBtn.textContent = 'Copied';
+                setTimeout(() => { copyBtn.innerHTML = orig; }, 1500);
+              } catch (err) {
+                // give simple feedback
+                copyBtn.textContent = 'Copy failed';
+                setTimeout(() => { copyBtn.textContent = 'Copy email'; }, 1500);
+              }
+            }
+          });
+        }
+      })();
+
+      // Smooth scrolling for internal links; respect reduced motion
+      (function smoothScrollLinks() {
+        const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (prefersReduced) return;
+        document.querySelectorAll('a[href^="#"]').forEach(a => {
+          // skip if it's just '#' or empty
+          const href = a.getAttribute('href');
+          if (!href || href === '#' ) return;
+          a.addEventListener('click', function (e) {
+            // allow default behavior for offcanvas toggle links
+            if (a.dataset.bsDismiss === 'offcanvas') return;
+            const target = document.querySelector(href);
+            if (target) {
+              e.preventDefault();
+              target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              // set focus for accessibility
+              target.setAttribute('tabindex', '-1');
+              target.focus({ preventScroll: true });
+            }
+          });
+        });
+      })();
+
+      // Disable opening of project buttons if no link provided (no dead #)
+      (function cleanProjectButtons() {
+        // Project cards: if .project-card contains anchors with href that is missing or 'none', hide them.
+        document.querySelectorAll('.project-card').forEach(card => {
+          card.querySelectorAll('a').forEach(a => {
+            const href = a.getAttribute('href');
+            if (!href || href.trim().toLowerCase() === 'none') {
+              a.style.display = 'none';
+            }
+          });
+        });
+      })();
+
+      // Accessibility: ensure skip link is visible on focus
+      (function setupSkipFocusable() {
+        // utility done by CSS .visually-hidden-focusable
+      })();
+
+      // Image fallback note already handled with onerror. Also ensure alt text present.
+      // End of script
+    })();
+  </script>
+
+  <!-- JSON-LD Person -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Benedek Sipos",
+    "email": "benedek.g.sipos@gmail.com",
+    "url": "https://ben-sipos.github.io",
+    "sameAs": [
+      "https://ben-sipos.github.io",
+      "https://www.linkedin.com/in/benedek-sipos-0b5859249"
+    ]
+  }
+  </script>
+</body>
+</html>
